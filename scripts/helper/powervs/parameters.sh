@@ -1,63 +1,63 @@
 #!/bin/bash
 
-export PVS_API_KEY=${PVS_API_KEY:=""}					# Obtained from CLI - ibmcloud pi service-list
+export PVS_API_KEY=${PVS_API_KEY:=""}                                   # Obtained from CLI - ibmcloud pi service-list
 export PVS_REGION=${PVS_REGION:="tok"}
 export PVS_ZONE=${PVS_ZONE:="tok04"}
 export PVS_SERVICE_INSTANCE_ID=${PVS_SERVICE_INSTANCE_ID:=""}
 
 export PVS_SUBNET_NAME=${PVS_SUBNET_NAME:="ocp-net"}
 
-export SYSTEM_TYPE=${SYSTEM_TYPE:="s922"}				# The type of system (s922/e980)
-export PROCESSOR_TYPE=${PROCESSOR_TYPE:="shared"}			# The type of processor mode (shared/dedicated)
+export SYSTEM_TYPE=${SYSTEM_TYPE:="s922"}                               # The type of system (s922/e980)
+export PROCESSOR_TYPE=${PROCESSOR_TYPE:="shared"}                       # The type of processor mode (shared/dedicated)
 
 if [ -z "$CLUSTER_ID_PREFIX" ]; then
-	CLUSTER_ID_PREFIX=rdr-${RHID_USERNAME:0:3}
-	export CLUSTER_ID_PREFIX=$CLUSTER_ID_PREFIX${OCP_VERSION/./}
+        CLUSTER_ID_PREFIX=rdr-${RHID_USERNAME:0:3}
+        export CLUSTER_ID_PREFIX=$CLUSTER_ID_PREFIX${OCP_VERSION/./}
 fi
 
 export USE_TIER1_STORAGE=${USE_TIER1_STORAGE:="false"}
-export CMA_PERCENT=${CMA_PERCENT:=0}					# Kernel contiguous memory area for DMA
+export CMA_PERCENT=${CMA_PERCENT:=0}                                    # Kernel contiguous memory area for DMA
 
 # Check service instance first, since it is not set above to a default value.  It
 # over rides zone and region if the service instance is set and recognized
 
 if [ "$PVS_SERVICE_INSTANCE_ID" == fac4755e-8aff-45f5-8d5c-1d3b58b7a229 ]; then
-	PVS_REGION=lon
-	PVS_ZONE=lon06
+        PVS_REGION=lon
+        PVS_ZONE=lon06
 elif [ "$PVS_SERVICE_INSTANCE_ID" == 60e43366-08de-4287-8c42-b7942406efc9 ]; then
-	PVS_REGION=tok
-	PVS_ZONE=tok04
+        PVS_REGION=tok
+        PVS_ZONE=tok04
 elif [ "$PVS_SERVICE_INSTANCE_ID" == 481377eb-e843-46df-9afa-a815da381ffa ]; then
-	PVS_REGION=sao
-	PVS_ZONE=sao01
+        PVS_REGION=sao
+        PVS_ZONE=sao01
 elif [ "$PVS_SERVICE_INSTANCE_ID" == 73585ea1-0d40-4c0f-b97c-e3d6923aa153 ]; then
-	PVS_REGION=mon
-	PVS_ZONE=mon01
+        PVS_REGION=mon
+        PVS_ZONE=mon01
 elif [ "$PVS_SERVICE_INSTANCE_ID" == 1f6f0f7d-ced0-409c-95f0-170f9cb775c0 ]; then
         PVS_REGION=syd
-        PVS_ZONE=syd04	
+        PVS_ZONE=syd04
 elif [ "$PVS_SERVICE_INSTANCE_ID" == 084f61d5-2b42-4ae6-ac21-dfa1b0e943eb ]; then
         PVS_REGION=syd
-        PVS_ZONE=syd05	
+        PVS_ZONE=syd05
 elif [ "$PVS_REGION" == lon ] && [ "$PVS_ZONE" == lon06 ]; then
-	PVS_SERVICE_INSTANCE_ID=fac4755e-8aff-45f5-8d5c-1d3b58b7a229
+        PVS_SERVICE_INSTANCE_ID=fac4755e-8aff-45f5-8d5c-1d3b58b7a229
 elif [ "$PVS_REGION" == tok ] && [ "$PVS_ZONE" == tok04 ]; then
-	PVS_SERVICE_INSTANCE_ID=60e43366-08de-4287-8c42-b7942406efc9
+        PVS_SERVICE_INSTANCE_ID=60e43366-08de-4287-8c42-b7942406efc9
 elif [ "$PVS_REGION" == sao ] && [ "$PVS_ZONE" == sao01 ]; then
-	PVS_SERVICE_INSTANCE_ID=481377eb-e843-46df-9afa-a815da381ffa
+        PVS_SERVICE_INSTANCE_ID=481377eb-e843-46df-9afa-a815da381ffa
 elif [ "$PVS_REGION" == mon ] && [ "$PVS_ZONE" == mon01 ]; then
-	PVS_SERVICE_INSTANCE_ID=73585ea1-0d40-4c0f-b97c-e3d6923aa153
+        PVS_SERVICE_INSTANCE_ID=73585ea1-0d40-4c0f-b97c-e3d6923aa153
 elif [ "$PVS_REGION" == syd ] && [ "$PVS_ZONE" == syd04 ]; then
-        PVS_SERVICE_INSTANCE_ID=1f6f0f7d-ced0-409c-95f0-170f9cb775c0	
+        PVS_SERVICE_INSTANCE_ID=1f6f0f7d-ced0-409c-95f0-170f9cb775c0
 fi
 
 if [ -z "$PVS_API_KEY" ] || [ -z "$PVS_SERVICE_INSTANCE_ID" ]; then
-	echo "Environment variables PVS_API_KEY and PVS_SERVICE_INSTANCE_ID must be set for PowerVS"
-	exit 1
+        echo "Environment variables PVS_API_KEY and PVS_SERVICE_INSTANCE_ID must be set for PowerVS"
+        exit 1
 fi
 if [ -z "$PVS_ZONE" ] || [ -z "$PVS_REGION" ]; then
-	echo "Environment variables PVS_ZONE and PVS_REGION must be set for PowerVS"
-	exit 1
+        echo "Environment variables PVS_ZONE and PVS_REGION must be set for PowerVS"
+        exit 1
 fi
 
 # The boot images below are common across OCS development zones, except where noted
@@ -66,38 +66,38 @@ export BASTION_IMAGE=${BASTION_IMAGE:="rhel-85-12132021"}
 
 case $OCP_VERSION in
 4.4|4.5)
-	if [ "$PVS_REGION" == tok ] && [ "$PVS_ZONE" == tok04 ] && [ -z "$RHCOS_IMAGE" ]; then
-		echo "WARNING: Validate boot image rhcos-454-09242020-001 is available in PowerVS zone ocp-ocs-tokyo-04"
-		echo "WARNING: Choose PowerVS zone ocp-ocs-london-06 instead"
-	fi
-	export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-454-09242020-001"}
-	export OCP_PROJECT_COMMIT="origin/release-4.5"
-	;;
+        if [ "$PVS_REGION" == tok ] && [ "$PVS_ZONE" == tok04 ] && [ -z "$RHCOS_IMAGE" ]; then
+                echo "WARNING: Validate boot image rhcos-454-09242020-001 is available in PowerVS zone ocp-ocs-tokyo-04"
+                echo "WARNING: Choose PowerVS zone ocp-ocs-london-06 instead"
+        fi
+        export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-454-09242020-001"}
+        export OCP_PROJECT_COMMIT="origin/release-4.5"
+        ;;
 4.6)
-	export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-46-09182020"}
-	export OCP_PROJECT_COMMIT="origin/release-4.6"
-	;;
+        export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-46-12152021"}
+        export OCP_PROJECT_COMMIT="origin/release-4.6"
+        ;;
 4.7)
-	export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-47-08062021"}
-	export OCP_PROJECT_COMMIT="origin/release-4.7"
-	;;
+        export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-47-12152021"}
+        export OCP_PROJECT_COMMIT="origin/release-4.7"
+        ;;
 4.8)
-	export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-48-07222021"}
-	export OCP_PROJECT_COMMIT="origin/release-4.8"
-	;;
+        export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-48-12152021"}
+        export OCP_PROJECT_COMMIT="origin/release-4.8"
+        ;;
 4.9)
-	export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-49-09072021"}
-	export OCP_PROJECT_COMMIT="origin/release-4.9"
-	;;
+        export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-49-12152021"}
+        export OCP_PROJECT_COMMIT="origin/release-4.9"
+        ;;
 4.10)
-        export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-410-10052021"}
+        export RHCOS_IMAGE=${RHCOS_IMAGE:="rhcos-410-02042022"}
         export OCP_PROJECT_COMMIT="origin/master"
-        ;;	
+        ;;
 esac
 
 if [[ "$USE_TIER1_STORAGE" == "true" ]] && [[ ! "$BASTION_IMAGE" =~ tier1 ]] && [[ ! "$RHCOS_IMAGE" =~ tier1 ]]; then
-	export BASTION_IMAGE=$BASTION_IMAGE-tier1
-	export RHCOS_IMAGE=$RHCOS_IMAGE-tier1
+        export BASTION_IMAGE=$BASTION_IMAGE-tier1
+        export RHCOS_IMAGE=$RHCOS_IMAGE-tier1
 fi
 
 # This is default minimalistic config. For PowerVS processors are equal to entitled physical count
@@ -115,12 +115,12 @@ export WORKER_VOLUME_SIZE=${WORKER_VOLUME_SIZE:="500"}
 
 export DNS_FORWARDERS=${DNS_FORWARDERS:="1.1.1.1; 9.9.9.9"}
 if [[ ! "$DNS_FORWARDERS" =~ "$DNS_BACKUP_SERVER" ]]; then
-	export DNS_FORWARDERS="$DNS_FORWARDERS; $DNS_BACKUP_SERVER"
+        export DNS_FORWARDERS="$DNS_FORWARDERS; $DNS_BACKUP_SERVER"
 fi
 
-export CLUSTER_DOMAIN=${CLUSTER_DOMAIN:="ibm.com"}			# xip.io
+export CLUSTER_DOMAIN=${CLUSTER_DOMAIN:="ibm.com"}                      # xip.io
 
-export OCS_CI_ON_BASTION=${OCS_CI_ON_BASTION:="false"}			# ocs-ci runs locally by default
+export OCS_CI_ON_BASTION=${OCS_CI_ON_BASTION:="false"}                  # ocs-ci runs locally by default
 
 # Default kernel arguments applied to all nodes: master & workers
 
@@ -150,17 +150,17 @@ OCS_DNS_ENTRIES="noobaa-mgmt-openshift-storage s3-openshift-storage rgw"
 
 function prepare_new_cluster_delete_old_cluster () {
 
-	POWERVS_SETUP_GENCNT_INSTALLED=-1
+        POWERVS_SETUP_GENCNT_INSTALLED=-1
 
-	invoke_powervs_setup=false
-	if [ ! -e ~/.powervs_setup ]; then
-		invoke_powervs_setup=true
-	else
-		source ~/.powervs_setup
-		if [[ "$POWERVS_SETUP_GENCNT_INSTALLED" -lt "$POWERVS_SETUP_GENCNT" ]]; then
-			invoke_powervs_setup=true
-		fi
-	fi
+        invoke_powervs_setup=false
+        if [ ! -e ~/.powervs_setup ]; then
+                invoke_powervs_setup=true
+        else
+                source ~/.powervs_setup
+                if [[ "$POWERVS_SETUP_GENCNT_INSTALLED" -lt "$POWERVS_SETUP_GENCNT" ]]; then
+                        invoke_powervs_setup=true
+                fi
+        fi
 
         if [ "$invoke_powervs_setup" == true ]; then
                 echo "Invoking setup-powervs-client.sh"
@@ -171,150 +171,149 @@ function prepare_new_cluster_delete_old_cluster () {
         # Remove pre-existing cluster.  We are going to create a new one
 
         echo "Invoking destroy-ocp.sh"
-	./destroy-ocp.sh
+        ./destroy-ocp.sh
 }
 
 # This is invoked at the end of ocp cluster create
 
 function setup_remote_oc_use () {
-	pushd $WORKSPACE/ocs-upi-kvm/src/$OCP_PROJECT
+        pushd $WORKSPACE/ocs-upi-kvm/src/$OCP_PROJECT
 
-	terraform_cmd=$WORKSPACE/bin/terraform
+        terraform_cmd=$WORKSPACE/bin/terraform
 
-	# BASTION_IP is used by caller
+        # BASTION_IP is used by caller
 
-	BASTION_IP=$($terraform_cmd output | grep ^bastion_public_ip | awk '{print $3}')
+        BASTION_IP=$($terraform_cmd output | grep ^bastion_public_ip | awk '{print $3}')
 
-	etc_hosts_entries=$($terraform_cmd output | awk '/^etc_hosts_entries/{getline;print;}')
+        etc_hosts_entries=$($terraform_cmd output | awk '/^etc_hosts_entries/{getline;print;}')
 
-	# oc command is always enabled locally
+        # oc command is always enabled locally
 
-	if [[ -n "$BASTION_IP" ]] && [[ -n "$etc_hosts_entries" ]]; then
-		if [ ! -e /etc/hosts.orig ]; then
-			sudo cp /etc/hosts /etc/hosts.orig
-		fi
+        if [[ -n "$BASTION_IP" ]] && [[ -n "$etc_hosts_entries" ]]; then
+                if [ ! -e /etc/hosts.orig ]; then
+                        sudo cp /etc/hosts /etc/hosts.orig
+                fi
 
-		base_url=$(echo "$etc_hosts_entries" | awk '{print $2}')  # api.lbrown46-2f4f.ibm.com
-		base_url=${base_url/api/apps}				  # apps.lbrown46-2f4f.ibm.com
+                base_url=$(echo "$etc_hosts_entries" | awk '{print $2}')  # api.lbrown46-2f4f.ibm.com
+                base_url=${base_url/api/apps}                             # apps.lbrown46-2f4f.ibm.com
 
-		api_urls=( $OCS_DNS_ENTRIES )
-		append_urls=$base_url
-		for i in "${api_urls[@]}"
-		do
-			append_urls="$append_urls $i.$base_url"
-		done
+                api_urls=( $OCS_DNS_ENTRIES )
+                append_urls=$base_url
+                for i in "${api_urls[@]}"
+                do
+                        append_urls="$append_urls $i.$base_url"
+                done
 
-		echo "Adding Bastion IP $BASTION_IP to /etc/hosts"
-		grep -v $BASTION_IP /etc/hosts | tee /tmp/hosts.1
-		echo "$etc_hosts_entries $append_urls" >> /tmp/hosts.1
-		sudo mv /tmp/hosts.1 /etc/hosts 
+                echo "Adding Bastion IP $BASTION_IP to /etc/hosts"
+                grep -v $BASTION_IP /etc/hosts | tee /tmp/hosts.1
+                echo "$etc_hosts_entries $append_urls" >> /tmp/hosts.1
+                sudo mv /tmp/hosts.1 /etc/hosts
 
-		echo "export BASTION_IP=$BASTION_IP" > $WORKSPACE/.bastion_ip
-		echo "export PLATFORM=$PLATFORM" >> $WORKSPACE/.bastion_ip
-	else
-		echo "No terraform data for local oc setup"
-		exit 1
-	fi
+                echo "export BASTION_IP=$BASTION_IP" > $WORKSPACE/.bastion_ip
+                echo "export PLATFORM=$PLATFORM" >> $WORKSPACE/.bastion_ip
+        else
+                echo "No terraform data for local oc setup"
+                exit 1
+        fi
 
-	popd
+        popd
 }
 
 # This is invoked at the start of setup-ocs-ci.sh
 
 function setup_remote_ocsci_use () {
-	source $WORKSPACE/.bastion_ip
+        source $WORKSPACE/.bastion_ip
 
-	if [[ "$OCS_CI_ON_BASTION" == "true" ]] && [[ -n "$BASTION_IP" ]]; then
+        if [[ "$OCS_CI_ON_BASTION" == "true" ]] && [[ -n "$BASTION_IP" ]]; then
 
-		echo "Copy ocs-ci secrets to bastion node $BASTION_IP"
+                echo "Copy ocs-ci secrets to bastion node $BASTION_IP"
 
-		cat $WORKSPACE/ocs-upi-kvm/files/$PLATFORM/env-ocs-ci.sh.in | envsubst > $WORKSPACE/bastion-env-ocs-ci.sh
-		scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $WORKSPACE/bastion-env-ocs-ci.sh root@$BASTION_IP:env-ocs-ci.sh >/dev/null 2>&1
-		scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $WORKSPACE/pull-secret.txt root@$BASTION_IP: >/dev/null 2>&1
-		scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $WORKSPACE/auth.yaml root@$BASTION_IP: >/dev/null 2>&1
+                cat $WORKSPACE/ocs-upi-kvm/files/$PLATFORM/env-ocs-ci.sh.in | envsubst > $WORKSPACE/bastion-env-ocs-ci.sh
+                scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $WORKSPACE/bastion-env-ocs-ci.sh root@$BASTION_IP:env-ocs-ci.sh >/dev/null 2>&1
+                scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $WORKSPACE/pull-secret.txt root@$BASTION_IP: >/dev/null 2>&1
+                scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $WORKSPACE/auth.yaml root@$BASTION_IP: >/dev/null 2>&1
 
-		BASTION_CMD="mkdir -p ~/bin && cp /usr/local/bin/oc ~/bin"
-		ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP $BASTION_CMD >/dev/null 2>&1
-		BASTION_CMD="cp -r openstack-upi/auth ~"
-		ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP $BASTION_CMD >/dev/null 2>&1
+                BASTION_CMD="mkdir -p ~/bin && cp /usr/local/bin/oc ~/bin"
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP $BASTION_CMD >/dev/null 2>&1
+                BASTION_CMD="cp -r openstack-upi/auth ~"
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP $BASTION_CMD >/dev/null 2>&1
 
-		echo "Copy ocs-upi-kvm to bastion node $BASTION_IP"
+                echo "Copy ocs-upi-kvm to bastion node $BASTION_IP"
 
-		pushd $WORKSPACE
-		tar -zcvf bastion-ocs-upi-kvm.tar.gz ocs-upi-kvm >/dev/null 2>&1
-		popd
-		ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP rm -rf ocs-upi-kvm >/dev/null 2>&1
-		scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $WORKSPACE/bastion-ocs-upi-kvm.tar.gz root@$BASTION_IP: >/dev/null 2>&1
-		BASTION_CMD="tar -xvzf bastion-ocs-upi-kvm.tar.gz >/dev/null 2>&1"
-		ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP $BASTION_CMD >/dev/null 2>&1
-		ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP chown -R root:root ocs-upi-kvm >/dev/null 2>&1
-	fi
+                pushd $WORKSPACE
+                tar -zcvf bastion-ocs-upi-kvm.tar.gz ocs-upi-kvm >/dev/null 2>&1
+                popd
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP rm -rf ocs-upi-kvm >/dev/null 2>&1
+                scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $WORKSPACE/bastion-ocs-upi-kvm.tar.gz root@$BASTION_IP: >/dev/null 2>&1
+                BASTION_CMD="tar -xvzf bastion-ocs-upi-kvm.tar.gz >/dev/null 2>&1"
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP $BASTION_CMD >/dev/null 2>&1
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP chown -R root:root ocs-upi-kvm >/dev/null 2>&1
+        fi
 }
 
 ocs_ci_on_bastion_rc=
 function invoke_ocs_ci_on_bastion ()
 {
-	args_array=( $@ )		# Input is a variable number of tokens -- cmd arg1 arg2 arg3 ...
+        args_array=( $@ )               # Input is a variable number of tokens -- cmd arg1 arg2 arg3 ...
 
-	cmd="${args_array[0]}"
+        cmd="${args_array[0]}"
 
-	i=1
-	n=${#args_array[@]}
-	args=
-	while (( i < n ))
-	do
-		args+="${args_array[$i]} "
-		(( i++ ))
-	done
+        i=1
+        n=${#args_array[@]}
+        args=
+        while (( i < n ))
+        do
+                args+="${args_array[$i]} "
+                (( i++ ))
+        done
 
-	source $WORKSPACE/.bastion_ip
-	BASTION_CMD="source env-ocs-ci.sh && cd ocs-upi-kvm/scripts && $cmd $args"
-	echo "Invoking $BASTION_CMD on bastion node $BASTION_IP"
-	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP $BASTION_CMD
-	ocs_ci_on_bastion_rc=$?
-	echo -e "\n=> $cmd complete rc=$ocs_ci_on_bastion_rc"
+        source $WORKSPACE/.bastion_ip
+        BASTION_CMD="source env-ocs-ci.sh && cd ocs-upi-kvm/scripts && $cmd $args"
+        echo "Invoking $BASTION_CMD on bastion node $BASTION_IP"
+        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$BASTION_IP $BASTION_CMD
+        ocs_ci_on_bastion_rc=$?
+        echo -e "\n=> $cmd complete rc=$ocs_ci_on_bastion_rc"
 }
 
 function config_ceph_for_nvmessd ()
 {
-	ceph_tools=$( oc -n openshift-storage get pods | grep rook-ceph-tools | awk '{print $1}' )
+        ceph_tools=$( oc -n openshift-storage get pods | grep rook-ceph-tools | awk '{print $1}' )
 
-	set +e
-	oc -n openshift-storage rsh $ceph_tools ceph config dump 2>&1 | grep osd_op_num_threads_per_shard > /dev/null
-	rc=$?
-	set -e
+        set +e
+        oc -n openshift-storage rsh $ceph_tools ceph config dump 2>&1 | grep osd_op_num_threads_per_shard > /dev/null
+        rc=$?
+        set -e
 
-	if [ "$rc" == 0 ]; then
-		echo "Ceph configuration:"
-		oc -n openshift-storage rsh $ceph_tools ceph config dump
-		return
-	fi
+        if [ "$rc" == 0 ]; then
+                echo "Ceph configuration:"
+                oc -n openshift-storage rsh $ceph_tools ceph config dump
+                return
+        fi
 
-	echo "Performing ceph configuration nvme/ssd enhancements"
+        echo "Performing ceph configuration nvme/ssd enhancements"
 
-	# TODO Add check for pre-existing settings and don't update.  These are new settings
-	# TODO Does this apply to powervm?
+        # TODO Add check for pre-existing settings and don't update.  These are new settings
+        # TODO Does this apply to powervm?
 
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd osd_op_num_threads_per_shard 2
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd osd_op_num_shards 8
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd osd_recovery_sleep 0
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd osd_snap_trim_sleep 0
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd osd_delete_sleep 0
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_min_alloc_size 4K
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_prefer_deferred_size 0
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_compression_min_blob_size 8K
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_compression_max_blob_size 64K
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_max_blob_size 64K
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_cache_size 3G
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_throttle_cost_per_io 4000
-	oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_deferred_batch_ops 16
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd osd_op_num_threads_per_shard 2
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd osd_op_num_shards 8
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd osd_recovery_sleep 0
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd osd_snap_trim_sleep 0
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd osd_delete_sleep 0
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_min_alloc_size 4K
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_prefer_deferred_size 0
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_compression_min_blob_size 8K
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_compression_max_blob_size 64K
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_max_blob_size 64K
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_cache_size 3G
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_throttle_cost_per_io 4000
+        oc -n openshift-storage rsh $ceph_tools ceph config set osd bluestore_deferred_batch_ops 16
 
-	echo "Dumping ceph configuration after nvme/ssd enhancements"
+        echo "Dumping ceph configuration after nvme/ssd enhancements"
 
-	oc -n openshift-storage rsh $ceph_tools ceph config dump
+        oc -n openshift-storage rsh $ceph_tools ceph config dump
 
-	# Delay a little for new settings to take effect
+        # Delay a little for new settings to take effect
 
-	sleep 1m
+        sleep 1m
 }
-
